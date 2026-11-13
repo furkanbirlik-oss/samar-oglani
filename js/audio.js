@@ -118,15 +118,57 @@
     },
   };
 
+  /* ---------- iPhone / iPad için ses açma ----------
+     iPhone'da sessiz mod anahtarı açıkken Web Audio sesleri duyulmaz.
+     Bilinen çözüm: arka planda SESSİZ bir <audio> öğesini döngüde çalmak.
+     Böylece telefon sayfayı "medya oynatıyor" sayar ve oyun sesleri duyulur.
+     Çalınan şey bellekte üretilen yarım saniyelik sessizliktir; dosya yok. */
+  const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let silentEl = null;
+
+  function startSilentLoop() {
+    try {
+      if (!silentEl) {
+        const rate = 8000, n = rate / 2;
+        const buf = new ArrayBuffer(44 + n), v = new DataView(buf);
+        const str = function (o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+        str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVE');
+        str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+        v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+        str(36, 'data'); v.setUint32(40, n, true);
+        for (let i = 0; i < n; i++) v.setUint8(44 + i, 128); // 8 bit seste 128 = sessizlik
+        silentEl = new Audio();
+        silentEl.src = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+        silentEl.loop = true;
+        silentEl.preload = 'auto';
+        silentEl.setAttribute('playsinline', '');
+        // Sayfa arka plana geçince durdur, öne gelince bir sonraki dokunuşta yeniden başlar
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden && silentEl) silentEl.pause();
+        });
+      }
+      if (silentEl.paused) {
+        const p = silentEl.play();
+        if (p && p.catch) p.catch(function () { /* dokunuş dışında çağrıldıysa sorun değil */ });
+      }
+    } catch (e) { /* ses açılamazsa oyun yine de çalışsın */ }
+  }
+
   Oyun.audio = {
     muted: false,
 
     /* Tarayıcılar sesi ancak bir tıklamadan sonra açar; ilk tıklamada çağrılır. */
     init: function () {
       try {
+        if (IS_IOS) startSilentLoop();
         if (!ctx) {
           const AC = window.AudioContext || window.webkitAudioContext;
           if (!AC) return;
+          // iPhone: ses sistemi kurulmadan ÖNCE "oynatma sesi" olarak işaretle
+          if (navigator.audioSession) {
+            try { navigator.audioSession.type = 'playback'; } catch (e) { /* desteklenmiyorsa geç */ }
+          }
           ctx = new AC();
           master = ctx.createGain();
           master.gain.value = 0.6;
@@ -134,10 +176,6 @@
           noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
           const d = noiseBuf.getChannelData(0);
           for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-          // iPhone: sessiz mod anahtarı açıkken de ses çıksın (oyun sesi olarak işaretle)
-          if (navigator.audioSession) {
-            try { navigator.audioSession.type = 'playback'; } catch (e) { /* desteklenmiyorsa geç */ }
-          }
           // iPhone: ilk dokunuşta sessiz bir ses çalmak ses sistemini açar
           const unlock = ctx.createBufferSource();
           unlock.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);

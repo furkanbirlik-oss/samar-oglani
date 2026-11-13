@@ -16,7 +16,7 @@ Terminalde yazan adresi (genelde `http://localhost:3000`) tarayıcıda aç.
 
 ## Nasıl oynanır?
 
-1. **Yüz:** İstersen bir fotoğraf yükle ve yüzü daireye oturt. Fotoğrafın altındaki düğmelerle çizim stilini seç: Çizgi Film, Anime, Pop Art, Karakalem ya da Orijinal.
+1. **Yüz:** İstersen bir fotoğraf yükle ve yüzü daireye oturt. Fotoğrafın altındaki düğmelerle çizim stilini seç: Çizgi Film, ✨ Anime (YZ), Anime Filtre, Pop Art, Karakalem ya da Orijinal.
 2. **Karakter:** Dört karakterden birini seç.
 3. **Yetenekler:** 15 yetenekten en fazla 4 tanesini seç. Seçme sıran tuş sıran olur. Karakterin iki favorisi hazır seçili gelir; değiştirebilirsin.
 4. **Mod:** "Serbest" (süre yok) ya da "60 Saniye Yarışı" (süre bitince puan, unvan ve rekor gösterilir).
@@ -40,7 +40,16 @@ Terminalde yazan adresi (genelde `http://localhost:3000`) tarayıcıda aç.
 
 ## Fotoğraf gizliliği
 
-Yüklediğin fotoğraf yalnızca açık olan sekmenin belleğinde durur. Çizgi film filtresi de senin cihazında çalışır; yapay zekâ servisi kullanılmaz. Hiçbir sunucuya gönderilmez, `localStorage` dahil hiçbir yere kaydedilmez. Sayfayı yenilediğinde ya da kapattığında silinir.
+Yüklediğin fotoğraf yalnızca açık olan sekmenin belleğinde durur. Çizgi film filtreleri ve "Anime (YZ)" yapay zekâ modeli de senin cihazında çalışır; hiçbir dış servis kullanılmaz. Hiçbir sunucuya gönderilmez, `localStorage` dahil hiçbir yere kaydedilmez. Sayfayı yenilediğinde ya da kapattığında silinir.
+
+## Anime (YZ) stili
+
+"✨ Anime (YZ)" stili, fotoğrafı anime çizimine çeviren bir yapay zekâ modelini (AnimeGANv2) tarayıcının içinde çalıştırır.
+
+- Model ve çalıştırma kütüphanesi (toplam yaklaşık 23 MB) yalnızca bu stil ilk seçildiğinde indirilir.
+- Çevirme bilgisayarda 10 saniye, telefonda yarım dakika kadar sürebilir; bu sırada fotoğrafın aslı gösterilir.
+- Bu stil, oyun `index.html` dosyasına çift tıklanarak açıldığında çalışmaz; siteden ya da `npx serve` ile açmak gerekir.
+- Modelin kaynağı ve lisans notu `models/KAYNAK.md` dosyasında. Oyunu ticari amaçla kullanmadan önce o notu oku.
 
 ## Klasör yapısı
 
@@ -51,7 +60,10 @@ lib/matter.min.js     Fizik motoru (Matter.js 0.20.0)
 assets/characters/    Karakterlerin gerçek fotoğrafları için klasör
 js/characters.js      Karakter listesi ve yer tutucu çizimleri
 js/attacks.js         Yetenek havuzu ve uçan nesnelerin hareketi
-js/cartoon.js         Fotoğrafı çizgi filme çeviren filtre
+js/cartoon.js         Fotoğrafı çizgi filme çeviren filtreler
+js/anime-ai.js        Anime (YZ): yapay zekâ modelini tarayıcıda çalıştırır
+lib/ort/              Modeli çalıştıran kütüphane (onnxruntime-web)
+models/               Anime modeli ve kaynak notu
 js/effects.js         Sarsıntı, yazılar, yıldızlar, ağır çekim
 js/audio.js           Sesler (Web Audio ile üretilir, ses dosyası yok)
 js/ragdoll.js         Eklemli bez bebek

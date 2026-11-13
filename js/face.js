@@ -19,12 +19,16 @@
     style: 'cizgi',       // seçili çizim stili (bkz. js/cartoon.js)
     creamUntil: 0,        // yüzde krema bu ana kadar durur
 
-    setPhoto: function (canvas) { this.photoOriginal = canvas; this.restyle(); },
+    aiPhoto: null,        // yapay zekâ ile anime'ye çevrilmiş hali (hazırsa)
+
+    setPhoto: function (canvas) { this.photoOriginal = canvas; this.aiPhoto = null; this.restyle(); },
     setStyle: function (id) { this.style = id; this.restyle(); },
     restyle: function () {
-      this.photo = this.photoOriginal ? Oyun.cartoon.apply(this.photoOriginal, this.style) : null;
+      if (!this.photoOriginal) this.photo = null;
+      else if (this.style === 'animeyz') this.photo = this.aiPhoto || this.photoOriginal; // çevirme bitene kadar aslı
+      else this.photo = Oyun.cartoon.apply(this.photoOriginal, this.style);
     },
-    clearPhoto: function () { this.photo = null; this.photoOriginal = null; },
+    clearPhoto: function () { this.photo = null; this.photoOriginal = null; this.aiPhoto = null; },
 
     /* Yüzü (0,0) merkezli r yarıçaplı daireye çizer.
        state: { level: 0-5, dazed: true/false, t: saniye } */

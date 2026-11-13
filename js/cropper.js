@@ -1,7 +1,7 @@
 /* ============================================================
    FOTOĞRAF KIRPMA
    Seçilen dosya sadece tarayıcı belleğinde açılır. Sürükleyip
-   yakınlaştırarak yüz daireye oturtulur; sonuç 256x256'lık bir
+   yakınlaştırarak yüz daireye oturtulur; sonuç 512x512'lık bir
    canvas olarak geri verilir. Hiçbir şey yüklenmez / kaydedilmez.
    ============================================================ */
 (function () {
@@ -9,7 +9,7 @@
   const Oyun = (window.Oyun = window.Oyun || {});
   const SIZE = 300;   // kırpma alanı (CSS pikseli)
   const D = 260;      // dairenin çapı
-  const OUT = 256;    // çıktı boyutu
+  const OUT = 512;    // çıktı boyutu (yapay zekâ modeli 512 ister)
 
   let root, canvas, ctx, slider;
   let img = null, minScale = 1, zoom = 1, off = { x: 0, y: 0 }, onDone = null;

@@ -15,7 +15,8 @@
 
   const STYLES = [
     { id: 'cizgi',     name: 'Çizgi Film', passes: 2, lo: 55, hi: 150 },
-    { id: 'anime',     name: 'Anime',      passes: 3, lo: 75, hi: 190 },
+    { id: 'animeyz',   name: '✨ Anime (YZ)', ai: true }, // yapay zekâ modeli: bkz. js/anime-ai.js
+    { id: 'anime',     name: 'Anime Filtre', passes: 3, lo: 75, hi: 190 },
     { id: 'popart',    name: 'Pop Art',    passes: 2, lo: 60, hi: 150 },
     { id: 'karakalem', name: 'Karakalem',  passes: 1, lo: 22, hi: 105 },
     { id: 'orijinal',  name: 'Orijinal' },
@@ -109,12 +110,13 @@
     /* src: kırpılmış kare canvas. Yeni bir canvas döndürür (src değişmez). */
     apply: function (src, styleId) {
       const st = STYLES.find(function (s) { return s.id === styleId; });
-      if (!st || st.id === 'orijinal') return src;
-      const w = src.width, h = src.height;
+      if (!st || st.ai || st.id === 'orijinal') return src;
+      const w = Math.min(256, src.width), h = w; // filtreler 256 pikselde çalışır (hızlı ve çizgiler belirgin)
       const out = document.createElement('canvas');
       out.width = w; out.height = h;
       const g = out.getContext('2d');
-      g.drawImage(src, 0, 0);
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(src, 0, 0, w, h);
       const img = g.getImageData(0, 0, w, h);
       let d = img.data;
       for (let i = 0; i < st.passes; i++) d = smooth(d, w, h, 3, 26);

@@ -30,6 +30,7 @@
     cooldown: {}, lastLaunch: 0, cdEls: [],
     rageUntil: 0, raging: false, lastAuto: 0,
     tornado: null,
+    aiBusy: false,
     timeStart: 0, over: false, lastSecond: -1,
     lastBubble: 0,
   });
@@ -66,9 +67,45 @@
       b.addEventListener('click', function () {
         Oyun.face.setStyle(st.id);
         Oyun.audio.play('click');
+        if (!st.ai && !state.aiBusy) styleStatus('');
         drawFacePreview();
+        ensureAI();
       });
       wrap.appendChild(b);
+    });
+  }
+
+  function styleStatus(text) {
+    const el = $('styleStatus');
+    el.textContent = text;
+    el.hidden = !text;
+  }
+
+  /* "Anime (YZ)" seçiliyse ve fotoğraf henüz çevrilmediyse yapay zekâ modelini çalıştırır.
+     Model bu cihazda çalışır; çevirme bitene kadar fotoğrafın aslı gösterilir. */
+  function ensureAI() {
+    const F = Oyun.face;
+    if (!F.photoOriginal || F.style !== 'animeyz' || F.aiPhoto || state.aiBusy) return;
+    if (!Oyun.animeAI.available()) {
+      styleStatus('Anime (YZ) yalnızca oyun bir adresten açıldığında çalışır (site ya da "npx serve"). Çizgi Film stiline dönüldü.');
+      F.setStyle('cizgi');
+      drawFacePreview();
+      return;
+    }
+    const src = F.photoOriginal;
+    state.aiBusy = true;
+    styleStatus('✨ Anime\'ye çevriliyor... İlk seferde model indirilir (yaklaşık 23 MB). Bilgisayarda 10 saniye, telefonda yarım dakika kadar sürebilir.');
+    Oyun.animeAI.run(src).then(function (out) {
+      if (F.photoOriginal === src) { F.aiPhoto = out; F.restyle(); }
+      styleStatus('');
+    }).catch(function (e) {
+      console.warn('Anime (YZ) çalışmadı:', e);
+      styleStatus('Bu cihazda yapay zekâ modeli çalıştırılamadı; Çizgi Film stiline dönüldü.');
+      if (F.style === 'animeyz') F.setStyle('cizgi');
+    }).then(function () {
+      state.aiBusy = false;
+      drawFacePreview();
+      ensureAI(); // bu sırada fotoğraf değiştiyse yenisini çevir
     });
   }
 
@@ -706,6 +743,7 @@
       Oyun.cropper.open(file, function (cropped) {
         Oyun.face.setPhoto(cropped);
         drawFacePreview();
+        ensureAI();
       });
     });
     $('btnClearPhoto').addEventListener('click', function () {

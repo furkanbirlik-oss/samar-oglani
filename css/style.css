@@ -372,3 +372,5 @@ kbd {
   .attacker { font-size: 11px; }
 }
 @media (max-width: 560px) { .status-box.timer { display: block; font-size: 18px; padding: 4px 10px; } }
+
+.status-note { margin: 0 0 12px; font-weight: 700; opacity: 1; color: #9b2c5a; }

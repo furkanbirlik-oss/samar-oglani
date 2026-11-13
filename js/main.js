@@ -340,6 +340,12 @@
     canvas = $('gameCanvas');
     ctx = canvas.getContext('2d');
 
+    // Tarayıcılar (özellikle iPhone) sesi ancak bir dokunuşun içinde açar;
+    // her dokunuşta sesin açık olduğundan emin oluruz.
+    ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (type) {
+      document.addEventListener(type, function () { Oyun.audio.init(); }, true);
+    });
+
     buildCards();
     drawFacePreview();
     Oyun.loadCharacterImages(drawCard);

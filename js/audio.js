@@ -134,8 +134,18 @@
           noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
           const d = noiseBuf.getChannelData(0);
           for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+          // iPhone: sessiz mod anahtarı açıkken de ses çıksın (oyun sesi olarak işaretle)
+          if (navigator.audioSession) {
+            try { navigator.audioSession.type = 'playback'; } catch (e) { /* desteklenmiyorsa geç */ }
+          }
+          // iPhone: ilk dokunuşta sessiz bir ses çalmak ses sistemini açar
+          const unlock = ctx.createBufferSource();
+          unlock.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+          unlock.connect(ctx.destination);
+          unlock.start(0);
         }
-        if (ctx.state === 'suspended') ctx.resume();
+        // 'suspended' ya da iPhone'da 'interrupted' (arama, sekme değişimi sonrası) olabilir
+        if (ctx.state !== 'running') ctx.resume();
       } catch (e) {
         console.warn('Ses başlatılamadı:', e);
       }

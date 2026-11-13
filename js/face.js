@@ -14,10 +14,17 @@
   const EYE_X = 0.36, EYE_Y = -0.15;
 
   const F = (Oyun.face = {
-    photo: null, // kırpılmış fotoğraf (canvas) ya da null
+    photo: null,          // kafaya çizilen (filtrelenmiş) fotoğraf ya da null
+    photoOriginal: null,  // kırpılmış ama filtresiz hali (stil değiştirmek için)
+    style: 'cizgi',       // seçili çizim stili (bkz. js/cartoon.js)
+    creamUntil: 0,        // yüzde krema bu ana kadar durur
 
-    setPhoto: function (canvas) { this.photo = canvas; },
-    clearPhoto: function () { this.photo = null; },
+    setPhoto: function (canvas) { this.photoOriginal = canvas; this.restyle(); },
+    setStyle: function (id) { this.style = id; this.restyle(); },
+    restyle: function () {
+      this.photo = this.photoOriginal ? Oyun.cartoon.apply(this.photoOriginal, this.style) : null;
+    },
+    clearPhoto: function () { this.photo = null; this.photoOriginal = null; },
 
     /* Yüzü (0,0) merkezli r yarıçaplı daireye çizer.
        state: { level: 0-5, dazed: true/false, t: saniye } */
@@ -49,6 +56,9 @@
         bandAid(ctx, r * 0.52, r * 0.38, 0.7, r * 0.46, r * 0.16);
         bandAid(ctx, r * 0.52, r * 0.38, -0.7, r * 0.46, r * 0.16);
       }
+      // Pasta yediyse yüz bir süre krema içinde kalır
+      const creamLeft = this.creamUntil - performance.now();
+      if (creamLeft > 0 && state.cream !== false) cream(ctx, r, Math.min(1, creamLeft / 900));
       ctx.restore();
     },
 
@@ -143,6 +153,21 @@
         ctx.beginPath(); ctx.arc(sx * w * 0.32, sy * h * 0.18, h * 0.07, 0, Math.PI * 2); ctx.fill();
       }
     }
+    ctx.restore();
+  }
+
+  function cream(ctx, r, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#fffaf0';
+    ctx.strokeStyle = '#e8c9d6';
+    ctx.lineWidth = Math.max(1.5, r * 0.05);
+    const blobs = [[0, 0.1, 0.62], [-0.45, -0.2, 0.36], [0.42, -0.25, 0.34], [-0.3, 0.5, 0.34], [0.38, 0.48, 0.3], [0, -0.5, 0.3]];
+    ctx.beginPath();
+    for (const b of blobs) { ctx.moveTo(b[0] * r + b[2] * r, b[1] * r); ctx.arc(b[0] * r, b[1] * r, b[2] * r, 0, Math.PI * 2); }
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ff5d8f'; // tepesindeki kiraz
+    ctx.beginPath(); ctx.arc(r * 0.1, -r * 0.35, r * 0.13, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 

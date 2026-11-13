@@ -8,6 +8,8 @@
   'use strict';
   const Oyun = (window.Oyun = window.Oyun || {});
   let ctx = null, master = null, noiseBuf = null;
+  let pitch = 1; // o an çalınan sesin perde çarpanı
+  const FIXED_PITCH = { combo: 1, levelup: 1, click: 1, rage: 1, tick: 1, timeup: 1 };
 
   /* Filtrelenmiş gürültü patlaması (şaklama, hışırtı vb.) */
   function noise(t, o) {
@@ -32,8 +34,8 @@
   function tone(t, o) {
     const osc = ctx.createOscillator();
     osc.type = o.type || 'sine';
-    osc.frequency.setValueAtTime(o.f0, t);
-    if (o.f1) osc.frequency.exponentialRampToValueAtTime(o.f1, t + o.dur);
+    osc.frequency.setValueAtTime(o.f0 * pitch, t);
+    if (o.f1) osc.frequency.exponentialRampToValueAtTime(o.f1 * pitch, t + o.dur);
     if (o.vibrato) {
       const lfo = ctx.createOscillator(), lg = ctx.createGain();
       lfo.frequency.value = o.vibrato;
@@ -110,6 +112,59 @@
     },
     click: function (t) {
       tone(t, { f0: 600, f1: 950, dur: 0.06, gain: 0.15 });
+    },
+    // --- Yeni yeteneklerin sesleri ---
+    broom: function (t) {
+      noise(t, { f0: 1800, q: 0.6, dur: 0.16, gain: 0.7 });
+      tone(t, { f0: 140, f1: 60, dur: 0.14, gain: 0.6 });
+    },
+    ball: function (t) {
+      tone(t, { type: 'triangle', f0: 420, f1: 180, dur: 0.09, gain: 0.7 });
+      tone(t, { f0: 190, f1: 80, dur: 0.16, gain: 0.8 });
+    },
+    cream: function (t) {
+      noise(t, { type: 'lowpass', f0: 900, f1: 250, dur: 0.22, gain: 0.8, attack: 0.01 });
+      tone(t, { f0: 320, f1: 130, dur: 0.16, gain: 0.4 });
+    },
+    splat: function (t) {
+      noise(t, { type: 'lowpass', f0: 1600, f1: 400, dur: 0.09, gain: 0.5 });
+      tone(t, { type: 'triangle', f0: 700, f1: 300, dur: 0.05, gain: 0.25 });
+    },
+    spring: function (t) {
+      tone(t, { f0: 130, f1: 50, dur: 0.14, gain: 0.9 });
+      tone(t, { f0: 220, f1: 660, dur: 0.4, gain: 0.25, vibrato: 30, vibratoDepth: 90 });
+    },
+    whistle: function (t) { // tepeden düşen şeyin ıslığı
+      tone(t, { f0: 1900, f1: 420, dur: 0.5, gain: 0.14, attack: 0.05 });
+    },
+    piano: function (t) {
+      noise(t, { type: 'lowpass', f0: 600, dur: 0.25, gain: 1.0 });
+      tone(t, { f0: 70, f1: 35, dur: 0.4, gain: 1.0 });
+      [131, 139, 185, 233, 311, 415, 587, 831].forEach(function (f, i) { // rastgele tuşlara basılmış gibi
+        tone(t + i * 0.012, { type: 'triangle', f0: f, dur: 1.1 - i * 0.08, gain: 0.16 });
+      });
+    },
+    wind: function (t) {
+      noise(t, { f0: 300, f1: 1400, q: 2, dur: 0.8, gain: 0.5, attack: 0.2 });
+      noise(t + 0.7, { f0: 1400, f1: 300, q: 2, dur: 0.9, gain: 0.5, attack: 0.1 });
+    },
+    yelp: function (t) { // "ay!" benzeri cızırtılı ses
+      tone(t, { type: 'sawtooth', f0: 330, f1: 600, dur: 0.1, gain: 0.07 });
+      tone(t + 0.1, { type: 'sawtooth', f0: 600, f1: 260, dur: 0.2, gain: 0.07 });
+    },
+    rage: function (t) {
+      tone(t, { type: 'sawtooth', f0: 160, f1: 880, dur: 0.5, gain: 0.14, attack: 0.05 });
+      [523, 659, 784, 1047, 1319].forEach(function (f, i) {
+        tone(t + 0.45 + i * 0.05, { type: 'square', f0: f, dur: 0.1, gain: 0.09 });
+      });
+    },
+    tick: function (t) {
+      tone(t, { type: 'square', f0: 880, dur: 0.05, gain: 0.08 });
+    },
+    timeup: function (t) {
+      [784, 659, 523, 392].forEach(function (f, i) {
+        tone(t + i * 0.13, { type: 'triangle', f0: f, dur: 0.2, gain: 0.2 });
+      });
     },
     levelup: function (t) {
       [523, 659, 784, 1047].forEach(function (f, i) {
@@ -191,6 +246,8 @@
 
     play: function (name, arg) {
       if (this.muted || !ctx || !SOUNDS[name]) return;
+      // Vuruş sesleri her seferinde biraz farklı perdeden çalsın (tekdüze olmasın)
+      pitch = FIXED_PITCH[name] ? 1 : 0.92 + Math.random() * 0.16;
       try { SOUNDS[name](ctx.currentTime + 0.001, arg === undefined ? 1 : arg); } catch (e) { /* ses hatası oyunu durdurmasın */ }
     },
 

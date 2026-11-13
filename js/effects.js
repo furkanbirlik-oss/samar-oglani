@@ -40,18 +40,52 @@
     stars: [],
     rings: [],
     slowUntil: 0,
+    freezeUntil: 0,
+    zoom: 0,
+    blobs: [],
+    bubbles: [],
 
     reset: function () {
-      this.shakeMag = 0; this.slowUntil = 0;
+      this.shakeMag = 0; this.slowUntil = 0; this.freezeUntil = 0; this.zoom = 0;
       this.texts.length = this.stars.length = this.rings.length = 0;
+      this.blobs.length = this.bubbles.length = 0;
     },
 
     shake: function (mag) { this.shakeMag = Math.min(40, Math.max(this.shakeMag, mag)); },
 
     slowmo: function (ms) { this.slowUntil = Math.max(this.slowUntil, performance.now() + ms); },
 
-    /* Oyun zamanının şu anki hızı (1 = normal) */
+    /* Vuruş anında çok kısa tam duraklama ("hit-stop"): darbeyi ağır hissettirir */
+    freeze: function (ms) {
+      const now = performance.now();
+      this.freezeUntil = Math.max(this.freezeUntil, now + ms);
+      this.slowUntil = Math.max(this.slowUntil, this.freezeUntil);
+    },
+
+    /* Kameranın bir anlığına yaklaşması */
+    zoomPunch: function (amount) { this.zoom = Math.min(0.09, Math.max(this.zoom, amount)); },
+
+    /* Sıçrayan damlalar (krema, yumurta...) */
+    splat: function (x, y, n, colors) {
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2, sp = 0.15 + Math.random() * 0.45;
+        this.blobs.push({
+          x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.3,
+          rad: 4 + Math.random() * 9, age: 0, life: 500 + Math.random() * 400,
+          color: colors[(Math.random() * colors.length) | 0],
+        });
+      }
+    },
+
+    /* Konuşma balonu. getPos(): balonun bağlı olduğu nokta (ör. kafa) */
+    bubble: function (text, getPos) {
+      this.bubbles.length = 0; // aynı anda tek balon
+      this.bubbles.push({ text: text, getPos: getPos, age: 0, life: 1400 });
+    },
+
+    /* Oyun zamanının şu anki hızı (1 = normal, 0 = donmuş) */
     timeScale: function (now) {
+      if (now < this.freezeUntil) return 0;
       if (now < this.slowUntil) return SLOW_SCALE;
       const k = (now - this.slowUntil) / SLOW_EASE;
       return k >= 1 ? 1 : SLOW_SCALE + (1 - SLOW_SCALE) * k;
@@ -102,10 +136,27 @@
         this.rings[i].age += dt;
         if (this.rings[i].age > this.rings[i].life) this.rings.splice(i, 1);
       }
+      for (let i = this.blobs.length - 1; i >= 0; i--) {
+        const b = this.blobs[i];
+        b.age += dt; b.vy += 0.0016 * dt;
+        b.x += b.vx * dt; b.y += b.vy * dt;
+        if (b.age > b.life) this.blobs.splice(i, 1);
+      }
+      for (let i = this.bubbles.length - 1; i >= 0; i--) {
+        this.bubbles[i].age += dt;
+        if (this.bubbles[i].age > this.bubbles[i].life) this.bubbles.splice(i, 1);
+      }
+      this.zoom *= Math.pow(0.86, dt / 16.7);
+      if (this.zoom < 0.001) this.zoom = 0;
     },
 
-    /* Sarsıntı için tüm sahneyi kaydırır (ctx.save/restore arasında çağır). */
-    applyShake: function (ctx) {
+    /* Sarsıntı ve yakınlaşma için tüm sahneyi oynatır (ctx.save/restore arasında çağır). */
+    applyShake: function (ctx, W, H) {
+      if (this.zoom) {
+        ctx.translate(W / 2, H / 2);
+        ctx.scale(1 + this.zoom, 1 + this.zoom);
+        ctx.translate(-W / 2, -H / 2);
+      }
       if (!this.shakeMag) return;
       ctx.translate((Math.random() - 0.5) * 2 * this.shakeMag, (Math.random() - 0.5) * 2 * this.shakeMag);
     },
@@ -134,7 +185,46 @@
         ctx.globalAlpha = Math.min(1, (1 - s.age / s.life) * 2);
         drawStar(ctx, s.x, s.y, s.rad, s.rot, s.color);
       }
+      // Damlalar
+      for (const b of this.blobs) {
+        ctx.globalAlpha = Math.min(1, (1 - b.age / b.life) * 2);
+        ctx.fillStyle = b.color;
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.rad, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
       ctx.globalAlpha = 1;
+      // Konuşma balonları
+      for (const b of this.bubbles) {
+        const p = b.getPos();
+        if (!p) continue;
+        const k = b.age / b.life;
+        const sc = b.age < 120 ? 0.4 + (b.age / 120) * 0.6 : 1;
+        ctx.save();
+        ctx.globalAlpha = k > 0.8 ? (1 - k) / 0.2 : 1;
+        ctx.translate(p.x, p.y);
+        ctx.scale(sc, sc);
+        ctx.font = '800 20px "Trebuchet MS", "Segoe UI", sans-serif';
+        const w = ctx.measureText(b.text).width + 28, h = 40;
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.beginPath(); // balon + kuyruk
+        ctx.moveTo(-w / 2 + 12, -h - 14);
+        ctx.arcTo(w / 2, -h - 14, w / 2, -14, 12);
+        ctx.arcTo(w / 2, -14, 0, -14, 12);
+        ctx.lineTo(10, -14); ctx.lineTo(0, 0); ctx.lineTo(-8, -14);
+        ctx.arcTo(-w / 2, -14, -w / 2, -h - 14, 12);
+        ctx.arcTo(-w / 2, -h - 14, w / 2, -h - 14, 12);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = INK;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(b.text, 0, -h / 2 - 14);
+        ctx.restore();
+      }
       // Yazılar
       for (const t of this.texts) {
         const k = t.age / t.life;

@@ -247,3 +247,128 @@ kbd {
   -webkit-touch-callout: none;
 }
 #gameCanvas, #cropCanvas { touch-action: none; }  /* sürükleme bizde kalsın */
+
+/* ============================================================
+   SÜRÜM 2 EKLERİ
+   ============================================================ */
+
+/* ----- Çizim stili düğmeleri (menü) ----- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 12px; }
+.chip {
+  font: inherit; font-size: 12.5px; font-weight: 800;
+  border: 2px solid #2b2b3a; border-radius: 999px;
+  padding: 4px 10px; background: #fff; color: #2b2b3a; cursor: pointer;
+}
+.chip.on { background: #2b2b3a; color: #ffd23f; }
+
+/* ----- Yetenek seçme ekranı ----- */
+#loadout {
+  flex-direction: column; align-items: center; gap: 14px;
+  padding: 20px 14px 28px; overflow-y: auto;
+  background: repeating-conic-gradient(from 0deg at 50% 0%, #b8e0ff 0deg 10deg, #a5d6fb 10deg 20deg);
+}
+.title.small { font-size: clamp(34px, 6.5vw, 64px); }
+#loadout .subtitle { text-align: center; }
+.skills {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  width: 100%; max-width: 860px; margin: auto 0;
+}
+@media (max-width: 760px) { .skills { grid-template-columns: repeat(3, 1fr); } }
+.skill {
+  position: relative; font: inherit;
+  background: #fffdf5; border: 3px solid #2b2b3a; border-radius: 16px;
+  box-shadow: 0 4px 0 #2b2b3a; padding: 10px 6px 8px; cursor: pointer;
+  text-align: center; color: #2b2b3a;
+  transition: transform .08s;
+}
+.skill:hover { transform: translateY(-2px); }
+.skill.on { background: var(--c, #ff5d8f); color: #fff; transform: translateY(-3px); }
+.skill.full { opacity: .45; }
+.skill .ico { font-size: 34px; line-height: 1.1; display: block; }
+.skill .name { font-weight: 900; font-size: 14px; display: block; margin-top: 2px; }
+.skill .stats { font-size: 11px; display: block; margin-top: 3px; opacity: .9; letter-spacing: .5px; }
+.skill .badge {
+  position: absolute; top: -9px; right: -7px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #ffd23f; color: #2b2b3a; border: 3px solid #2b2b3a;
+  font-weight: 900; font-size: 14px; line-height: 20px;
+  display: none;
+}
+.skill.on .badge { display: block; }
+.mode-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; font-weight: 800; }
+.btn.mode.on { background: #2b2b3a; color: #ffd23f; }
+
+/* ----- Oyun içi: öfke barı, süre, bekleme ----- */
+.rage-bar {
+  height: 8px; margin-top: 4px;
+  background: #e9e4d4; border: 2px solid #2b2b3a; border-radius: 6px; overflow: hidden;
+}
+.rage-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffbe0b, #ff3d00); }
+.rage-bar.full i { animation: ragePulse .45s infinite alternate; }
+@keyframes ragePulse { to { filter: brightness(1.5); } }
+
+.status-box.timer { font-size: 20px; }
+.status-box.timer.low { background: #ff3d6e; color: #fff; animation: bump .5s infinite; }
+
+.btn.rage {
+  position: absolute; left: 50%; bottom: 104px;
+  transform: translateX(-50%);
+  font-size: 22px; padding: 10px 26px;
+  background: linear-gradient(#ffbe0b, #ff3d00); color: #fff;
+  text-shadow: 0 2px 0 #2b2b3a;
+  animation: rageBtn .5s infinite alternate;
+  z-index: 2;
+}
+.btn.rage:active { transform: translateX(-50%) translateY(3px); }
+@keyframes rageBtn { to { transform: translateX(-50%) scale(1.08) rotate(-2deg); } }
+
+#rageTint {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(255,60,0,0) 45%, rgba(255,60,0,.55) 100%);
+  transition: opacity .2s;
+}
+#rageTint.on { opacity: 1; animation: ragePulse .3s infinite alternate; }
+
+#attackButtons { flex-wrap: wrap; justify-content: center; }
+.atk { position: relative; overflow: hidden; }
+.atk .cd { /* bekleme süresi perdesi: alttan yukarı boşalır */
+  position: absolute; left: 0; right: 0; bottom: 0; height: 0;
+  background: rgba(20, 20, 35, .6); pointer-events: none;
+}
+.atk.waiting { filter: saturate(.5); }
+@media (max-width: 900px) {
+  .atk .lbl { display: none; }
+  .atk { padding: 8px 12px; }
+  .atk .ico { font-size: 28px; }
+  #btnStand .wide { display: none; }
+  #attackBar { gap: 10px; }
+}
+@media (max-width: 560px) { .status-box.status { display: none; } .btn.rage { font-size: 18px; } .btn.rage kbd { display: none; } }
+
+/* ----- Sonuç ekranı ----- */
+#results {
+  position: absolute; inset: 0; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(20, 20, 35, .7); padding: 12px; z-index: 5;
+}
+#results.open { display: flex; }
+.big-num { font-family: Impact, "Arial Black", sans-serif; font-size: 72px; line-height: 1; color: #ff3d6e; }
+.crop-box .result-title { font-size: 20px; font-weight: 900; margin: 6px 0; }
+
+/* ----- Telefon düzeni: üst çubuk iki satır, yetenekler tek satır ----- */
+@media (max-width: 560px) {
+  #hud { flex-wrap: wrap; padding: 8px; gap: 6px; }
+  .hud-side { flex: 0 0 auto; flex-wrap: nowrap; gap: 6px; }
+  .hud-side.right { margin-left: auto; }
+  .hud-center { order: 3; flex: 0 0 100%; }
+  .score-box b { font-size: 32px; }
+  #toast { top: 170px; font-size: 13px; }
+  #attackBar { gap: 6px; padding: 8px 6px 12px; }
+  #attackButtons { flex-wrap: nowrap; gap: 6px; }
+  .atk { padding: 8px 10px; }
+  .atk kbd { display: none; }
+  .atk .ico { font-size: 30px; }
+  .attacker canvas { width: 44px; height: 44px; }
+  .attacker { font-size: 11px; }
+}
+@media (max-width: 560px) { .status-box.timer { display: block; font-size: 18px; padding: 4px 10px; } }

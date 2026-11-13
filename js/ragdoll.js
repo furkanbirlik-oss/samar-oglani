@@ -22,6 +22,9 @@
     S: 1,              // ölçek
     dazedUntil: 0,
     lastDisturb: 0,
+    flashUntil: 0,     // vuruş anında beyaz parlama
+    squashUntil: 0,    // piyano altında yassılma
+    trail: [],         // hızlı giderken kafanın bıraktığı iz
 
     /* Bebeği (x, groundY) noktasında ayakta duracak şekilde kurar. */
     build: function (x, gy, scale) {
@@ -88,6 +91,9 @@
       M.Composite.add(world, joints);
 
       this.dazedUntil = 0;
+      this.flashUntil = 0;
+      this.squashUntil = 0;
+      this.trail = [];
       this.lastDisturb = performance.now();
       this.setStanding(true, x);
     },
@@ -158,6 +164,10 @@
     /* Her karede çağrılır: bir süre rahat bırakılırsa kendiliğinden ayağa kalkar. */
     update: function (now) {
       if (!this.parts) return;
+      // Hız izi
+      const head = this.parts.head;
+      while (this.trail.length && now - this.trail[0].t > 160) this.trail.shift();
+      if (head.speed > 15) this.trail.push({ x: head.position.x, y: head.position.y, t: now });
       if (Oyun.physics.grabbedBody) { this.disturb(); return; }
       if (!this.standing && now - this.lastDisturb > 2800 && this.parts.torso.speed < 1.5) {
         this.setStanding(true, this.parts.torso.position.x);
@@ -179,6 +189,26 @@
       ctx.ellipse(tp.x, gy + 6, (70 - hgt * 30) * S, (12 - hgt * 5) * S, 0, 0, Math.PI * 2);
       ctx.fill();
 
+      // Hız izi (kafanın arkasında soluk halkalar)
+      const hr = this.parts.head.rd.r;
+      for (let i = 0; i < this.trail.length; i++) {
+        const tr = this.trail[i];
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.28 * (1 - (now - tr.t) / 160)) + ')';
+        ctx.beginPath(); ctx.arc(tr.x, tr.y, hr * 0.9, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Yassılma: bütün bebeği yere doğru ezip yana yay (sadece görüntü)
+      const sqLeft = this.squashUntil - now;
+      ctx.save();
+      if (sqLeft > 0) {
+        const k = Math.min(1, sqLeft / 350);
+        ctx.translate(tp.x, gy);
+        ctx.scale(1 + 0.45 * k, 1 - 0.5 * k);
+        ctx.translate(-tp.x, -gy);
+      }
+      const flash = now < this.flashUntil;
+      const whiten = function () { if (flash) { ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fill(); } };
+
       for (let i = 0; i < this.bodies.length; i++) {
         const b = this.bodies[i], d = b.rd;
         ctx.save();
@@ -190,7 +220,7 @@
         if (d.name === 'head') {
           if (level >= 4) Oyun.face.drawBump(ctx, d.r, t);
           Oyun.face.draw(ctx, d.r, { level: level, dazed: this.isDazed(now), t: t });
-          ctx.beginPath(); ctx.arc(0, 0, d.r, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, 0, d.r, 0, Math.PI * 2); whiten(); ctx.stroke();
         } else if (d.name === 'torso') {
           Oyun.roundRect(ctx, -d.w / 2, -d.h / 2, d.w, d.h, 14 * S);
           ctx.fillStyle = COLORS.shirt; ctx.fill();
@@ -200,6 +230,7 @@
           ctx.fillStyle = COLORS.pants;
           ctx.fillRect(-d.w / 2, d.h * 0.28, d.w, d.h * 0.3);
           ctx.restore();
+          whiten();
           ctx.stroke();
         } else {
           const isArm = d.name.indexOf('Arm') > 0, lower = d.name[0] === 'l';
@@ -209,7 +240,7 @@
           }
           Oyun.roundRect(ctx, -d.w / 2, -d.h / 2, d.w, d.h, d.w * 0.45);
           ctx.fillStyle = isArm ? (lower ? COLORS.skin : COLORS.shirt) : COLORS.pants;
-          ctx.fill(); ctx.stroke();
+          ctx.fill(); whiten(); ctx.stroke();
           if (lower && isArm) { // el
             ctx.fillStyle = COLORS.skin;
             ctx.beginPath(); ctx.arc(0, d.h / 2, 10 * S, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -217,6 +248,7 @@
         }
         ctx.restore();
       }
+      ctx.restore(); // yassılma dönüşümünü geri al
     },
   });
 })();

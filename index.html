@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>Şamar Oğlanı</title>
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -17,12 +17,13 @@
       <div class="panel">
         <h2>1. Kurbanın yüzü</h2>
         <canvas id="facePreview" width="320" height="320"></canvas>
+        <div id="styleChips" class="chips" hidden></div>
         <div class="row">
           <button id="btnUpload" class="btn primary">📷 Fotoğraf Yükle</button>
           <button id="btnClearPhoto" class="btn ghost" hidden>Varsayılan Yüz</button>
         </div>
         <input type="file" id="fileInput" accept="image/*" hidden>
-        <p class="note">🔒 Fotoğraf sadece bu sekmenin belleğinde durur. Hiçbir yere gönderilmez, hiçbir yere kaydedilmez.</p>
+        <p class="note">🔒 Fotoğraf sadece bu sekmenin belleğinde durur. Çizgi film filtresi de burada, senin cihazında çalışır. Hiçbir yere gönderilmez, hiçbir yere kaydedilmez.</p>
       </div>
 
       <div class="panel">
@@ -32,23 +33,41 @@
     </div>
 
     <button id="btnStart" class="btn big" disabled>Önce karakter seç</button>
-    <p class="version">sürüm 4</p>
+    <p class="version">sürüm 5</p>
+  </section>
+
+  <!-- ============ YETENEK SEÇİMİ ============ -->
+  <section id="loadout" class="screen">
+    <h1 class="title small">YETENEKLERİNİ <span>SEÇ</span></h1>
+    <p class="subtitle"><b id="loadoutWho"></b> en fazla 4 yetenek alabilir. Seçme sıran tuş sıran olur (1-4).</p>
+    <div id="skillGrid" class="skills"></div>
+    <div class="mode-row">
+      <span>Oyun modu:</span>
+      <button class="btn small mode" data-mode="free">🎈 Serbest</button>
+      <button class="btn small mode" data-mode="timed">⏱️ 60 Saniye Yarışı</button>
+    </div>
+    <div class="row">
+      <button id="btnBack" class="btn ghost">← Geri</button>
+      <button id="btnFight" class="btn big">DÖVÜŞE BAŞLA ▶</button>
+    </div>
   </section>
 
   <!-- ============ OYUN EKRANI ============ -->
   <section id="game" class="screen">
     <canvas id="gameCanvas"></canvas>
+    <div id="rageTint"></div>
 
     <div id="hud">
       <div class="hud-side">
         <button id="btnMenu" class="btn small">← Menü</button>
-        <button id="btnStand" class="btn small">🧍 Ayağa Kaldır <kbd>R</kbd></button>
+        <button id="btnStand" class="btn small">🧍 <span class="wide">Ayağa Kaldır</span> <kbd>R</kbd></button>
         <button id="btnMute" class="btn small" title="Sesi aç/kapat (M)">🔊</button>
       </div>
       <div class="hud-center">
         <div class="score-box">
           <span>Hasar Puanı</span>
           <b id="scoreVal">0</b>
+          <div id="rageWrap" class="rage-bar" title="Öfke barı"><i id="rageBar"></i></div>
         </div>
         <div id="comboBox" class="combo-box">
           <span>Kombo</span> <b id="comboVal">x2</b>
@@ -56,11 +75,13 @@
         </div>
       </div>
       <div class="hud-side right">
-        <div class="status-box">Durum: <b id="statusVal">Sapasağlam</b></div>
+        <div id="timerBox" class="status-box timer" hidden>⏱️ <b id="timerVal">60</b></div>
+        <div class="status-box status">Durum: <b id="statusVal">Sapasağlam</b></div>
       </div>
     </div>
 
     <div id="toast"></div>
+    <button id="btnRage" class="btn rage" hidden>🔥 ÇILDIR! <kbd>Boşluk</kbd></button>
 
     <div id="attackBar">
       <div class="attacker">
@@ -68,6 +89,20 @@
         <span id="attackerName"></span>
       </div>
       <div id="attackButtons"></div>
+    </div>
+
+    <!-- Süre bitince çıkan sonuç ekranı -->
+    <div id="results">
+      <div class="crop-box">
+        <h2>⏱️ Süre doldu!</h2>
+        <div id="resultScore" class="big-num">0</div>
+        <p id="resultTitle" class="result-title"></p>
+        <p id="resultStats"></p>
+        <div class="row">
+          <button id="btnResMenu" class="btn ghost">Menü</button>
+          <button id="btnAgain" class="btn primary">Tekrar Oyna</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -86,17 +121,18 @@
   </div>
 
   <!-- Fizik motoru -->
-  <script src="lib/matter.min.js?v=4"></script>
+  <script src="lib/matter.min.js?v=5"></script>
   <!-- Oyun dosyaları (sıra önemli: main.js en sonda) -->
-  <script src="js/audio.js?v=4"></script>
-  <script src="js/face.js?v=4"></script>
-  <script src="js/characters.js?v=4"></script>
-  <script src="js/attacks.js?v=4"></script>
-  <script src="js/effects.js?v=4"></script>
-  <script src="js/score.js?v=4"></script>
-  <script src="js/physics.js?v=4"></script>
-  <script src="js/ragdoll.js?v=4"></script>
-  <script src="js/cropper.js?v=4"></script>
-  <script src="js/main.js?v=4"></script>
+  <script src="js/audio.js?v=5"></script>
+  <script src="js/cartoon.js?v=5"></script>
+  <script src="js/face.js?v=5"></script>
+  <script src="js/characters.js?v=5"></script>
+  <script src="js/attacks.js?v=5"></script>
+  <script src="js/effects.js?v=5"></script>
+  <script src="js/score.js?v=5"></script>
+  <script src="js/physics.js?v=5"></script>
+  <script src="js/ragdoll.js?v=5"></script>
+  <script src="js/cropper.js?v=5"></script>
+  <script src="js/main.js?v=5"></script>
 </body>
 </html>

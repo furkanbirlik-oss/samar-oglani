@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Şamar Oğlanı</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ============ ANA MENÜ ============ -->
+  <section id="menu" class="screen active">
+    <h1 class="title">ŞAMAR <span>OĞLANI</span></h1>
+    <p class="subtitle">Stres atma simülatörü — kan yok, bol yıldız var!</p>
+
+    <div class="menu-grid">
+      <div class="panel">
+        <h2>1. Kurbanın yüzü</h2>
+        <canvas id="facePreview" width="320" height="320"></canvas>
+        <div class="row">
+          <button id="btnUpload" class="btn primary">📷 Fotoğraf Yükle</button>
+          <button id="btnClearPhoto" class="btn ghost" hidden>Varsayılan Yüz</button>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" hidden>
+        <p class="note">🔒 Fotoğraf sadece bu sekmenin belleğinde durur. Hiçbir yere gönderilmez, hiçbir yere kaydedilmez.</p>
+      </div>
+
+      <div class="panel">
+        <h2>2. Karakterini seç</h2>
+        <div id="charCards" class="cards"></div>
+      </div>
+    </div>
+
+    <button id="btnStart" class="btn big" disabled>Önce karakter seç</button>
+  </section>
+
+  <!-- ============ OYUN EKRANI ============ -->
+  <section id="game" class="screen">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hud">
+      <div class="hud-side">
+        <button id="btnMenu" class="btn small">← Menü</button>
+        <button id="btnStand" class="btn small">🧍 Ayağa Kaldır <kbd>R</kbd></button>
+        <button id="btnMute" class="btn small" title="Sesi aç/kapat (M)">🔊</button>
+      </div>
+      <div class="hud-center">
+        <div class="score-box">
+          <span>Hasar Puanı</span>
+          <b id="scoreVal">0</b>
+        </div>
+        <div id="comboBox" class="combo-box">
+          <span>Kombo</span> <b id="comboVal">x2</b>
+          <div class="combo-bar"><i id="comboBar"></i></div>
+        </div>
+      </div>
+      <div class="hud-side right">
+        <div class="status-box">Durum: <b id="statusVal">Sapasağlam</b></div>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <div id="attackBar">
+      <div class="attacker">
+        <canvas id="attackerPortrait" width="128" height="128"></canvas>
+        <span id="attackerName"></span>
+      </div>
+      <div id="attackButtons"></div>
+    </div>
+  </section>
+
+  <!-- ============ FOTOĞRAF KIRPMA ============ -->
+  <div id="cropper">
+    <div class="crop-box">
+      <h2>Yüzü daireye oturt</h2>
+      <p>Sürükleyerek taşı, kaydırıcıyla (ya da fare tekerleğiyle) yakınlaştır.<br>Gözleri kesik çizgiye hizalarsan süsler tam oturur.</p>
+      <canvas id="cropCanvas" width="600" height="600"></canvas>
+      <label class="zoom-row">🔍 <input type="range" id="cropZoom" min="1" max="5" step="0.01" value="1"></label>
+      <div class="row">
+        <button id="cropCancel" class="btn ghost">İptal</button>
+        <button id="cropOk" class="btn primary">Tamam</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fizik motoru -->
+  <script src="lib/matter.min.js"></script>
+  <!-- Oyun dosyaları (sıra önemli: main.js en sonda) -->
+  <script src="js/audio.js"></script>
+  <script src="js/face.js"></script>
+  <script src="js/characters.js"></script>
+  <script src="js/attacks.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/score.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/ragdoll.js"></script>
+  <script src="js/cropper.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

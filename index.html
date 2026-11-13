@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>Şamar Oğlanı</title>
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 
@@ -15,15 +15,18 @@
 
     <div class="menu-grid">
       <div class="panel">
-        <h2>1. Kurbanın yüzü</h2>
+        <h2>1. Kurban</h2>
         <canvas id="facePreview" width="320" height="320"></canvas>
         <div id="styleChips" class="chips" hidden></div>
         <p id="styleStatus" class="note status-note" hidden></p>
         <div class="row">
-          <button id="btnUpload" class="btn primary">📷 Fotoğraf Yükle</button>
+          <button id="btnUpload" class="btn primary">📷 Yüz Fotoğrafı</button>
+          <button id="btnUploadBody" class="btn primary alt">🧍 Tam Boy Fotoğraf</button>
           <button id="btnClearPhoto" class="btn ghost" hidden>Varsayılan Yüz</button>
         </div>
         <input type="file" id="fileInput" accept="image/*" hidden>
+        <input type="file" id="bodyInput" accept="image/*" hidden>
+        <p class="note">💡 Tam boy için: baştan ayağa görünen, düz duran ve kolları gövdeden biraz açık bir fotoğraf en iyi sonucu verir.</p>
         <p class="note">🔒 Fotoğraf sadece bu sekmenin belleğinde durur. Çizgi film filtresi de burada, senin cihazında çalışır. Hiçbir yere gönderilmez, hiçbir yere kaydedilmez.</p>
       </div>
 
@@ -34,7 +37,7 @@
     </div>
 
     <button id="btnStart" class="btn big" disabled>Önce karakter seç</button>
-    <p class="version">sürüm 6</p>
+    <p class="version">sürüm 7</p>
   </section>
 
   <!-- ============ YETENEK SEÇİMİ ============ -->
@@ -121,20 +124,37 @@
     </div>
   </div>
 
+  <!-- ============ TAM BOY: EKLEM DÜZENLEME ============ -->
+  <div id="rig">
+    <div class="crop-box rig-box">
+      <h2>Eklemleri kontrol et</h2>
+      <p id="rigHint"></p>
+      <canvas id="rigCanvas"></canvas>
+      <p class="legend">🟡 kafa üstü ve çene · ⚪ gözler · <span class="l">●</span> soldaki eklemler · <span class="r">●</span> sağdaki eklemler</p>
+      <label class="zoom-row">Kalınlık <input type="range" id="rigWidth" min="0.6" max="1.6" step="0.02" value="1"></label>
+      <div class="row">
+        <button id="rigCancel" class="btn ghost">İptal</button>
+        <button id="rigOk" class="btn primary">Tamam</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Fizik motoru -->
-  <script src="lib/matter.min.js?v=6"></script>
+  <script src="lib/matter.min.js?v=7"></script>
   <!-- Oyun dosyaları (sıra önemli: main.js en sonda) -->
-  <script src="js/audio.js?v=6"></script>
-  <script src="js/cartoon.js?v=6"></script>
-  <script src="js/anime-ai.js?v=6"></script>
-  <script src="js/face.js?v=6"></script>
-  <script src="js/characters.js?v=6"></script>
-  <script src="js/attacks.js?v=6"></script>
-  <script src="js/effects.js?v=6"></script>
-  <script src="js/score.js?v=6"></script>
-  <script src="js/physics.js?v=6"></script>
-  <script src="js/ragdoll.js?v=6"></script>
-  <script src="js/cropper.js?v=6"></script>
-  <script src="js/main.js?v=6"></script>
+  <script src="js/audio.js?v=7"></script>
+  <script src="js/cartoon.js?v=7"></script>
+  <script src="js/anime-ai.js?v=7"></script>
+  <script src="js/pose.js?v=7"></script>
+  <script src="js/face.js?v=7"></script>
+  <script src="js/characters.js?v=7"></script>
+  <script src="js/attacks.js?v=7"></script>
+  <script src="js/effects.js?v=7"></script>
+  <script src="js/score.js?v=7"></script>
+  <script src="js/physics.js?v=7"></script>
+  <script src="js/ragdoll.js?v=7"></script>
+  <script src="js/cropper.js?v=7"></script>
+  <script src="js/bodyskin.js?v=7"></script>
+  <script src="js/main.js?v=7"></script>
 </body>
 </html>

@@ -30,7 +30,7 @@
     cooldown: {}, lastLaunch: 0, cdEls: [],
     rageUntil: 0, raging: false, lastAuto: 0,
     tornado: null,
-    aiBusy: false,
+    aiBusy: false, skinBusy: false, skinAgain: false,
     timeStart: 0, over: false, lastSecond: -1,
     lastBubble: 0,
   });
@@ -43,13 +43,17 @@
   function drawFacePreview() {
     const c = $('facePreview'), g = c.getContext('2d');
     g.clearRect(0, 0, c.width, c.height);
-    g.save();
-    g.translate(c.width / 2, c.height / 2);
-    Oyun.face.draw(g, 150, { level: 0, cream: false });
-    g.beginPath(); g.arc(0, 0, 150, 0, Math.PI * 2);
-    g.lineWidth = 8; g.strokeStyle = '#2b2b3a'; g.stroke();
-    g.restore();
-    const has = !!Oyun.face.photo;
+    if (Oyun.skin) { // tam boy fotoğraf: bebeğin tamamını göster
+      Oyun.drawSkinStatic(g, c.width / 2, 306, 1);
+    } else {
+      g.save();
+      g.translate(c.width / 2, c.height / 2);
+      Oyun.face.draw(g, 150, { level: 0, cream: false });
+      g.beginPath(); g.arc(0, 0, 150, 0, Math.PI * 2);
+      g.lineWidth = 8; g.strokeStyle = '#2b2b3a'; g.stroke();
+      g.restore();
+    }
+    const has = !!Oyun.face.photo || !!Oyun.body.src;
     $('btnClearPhoto').hidden = !has;
     $('styleChips').hidden = !has;
     document.querySelectorAll('#styleChips .chip').forEach(function (el) {
@@ -67,6 +71,7 @@
       b.addEventListener('click', function () {
         Oyun.face.setStyle(st.id);
         Oyun.audio.play('click');
+        if (Oyun.body.src) { rebuildSkin(); drawFacePreview(); return; } // tam boy modu
         if (!st.ai && !state.aiBusy) styleStatus('');
         drawFacePreview();
         ensureAI();
@@ -85,6 +90,7 @@
      Model bu cihazda çalışır; çevirme bitene kadar fotoğrafın aslı gösterilir. */
   function ensureAI() {
     const F = Oyun.face;
+    if (Oyun.body.src) return; // tam boy modunda stil rebuildSkin ile uygulanır
     if (!F.photoOriginal || F.style !== 'animeyz' || F.aiPhoto || state.aiBusy) return;
     if (!Oyun.animeAI.available()) {
       styleStatus('Anime (YZ) yalnızca oyun bir adresten açıldığında çalışır (site ya da "npx serve"). Çizgi Film stiline dönüldü.');
@@ -106,6 +112,65 @@
       state.aiBusy = false;
       drawFacePreview();
       ensureAI(); // bu sırada fotoğraf değiştiyse yenisini çevir
+    });
+  }
+
+  /* ---------- Tam boy fotoğraf ---------- */
+
+  /* Seçilen dosyayı açar, eklemleri otomatik arar ve düzenleme ekranını gösterir. */
+  function loadBody(file) {
+    const Bd = Oyun.body;
+    styleStatus('🧍 Fotoğraf açılıyor...');
+    Bd.loadPhoto(file).then(function () {
+      Oyun.face.clearPhoto();
+      Oyun.skin = null;
+      if (!Oyun.pose.available()) return null;
+      styleStatus('🧍 Vücut aranıyor... İlk seferde model indirilir (yaklaşık 24 MB).');
+      return Oyun.pose.detect(Bd.src).catch(function (e) { console.warn('Poz bulunamadı:', e); return null; });
+    }).then(function (det) {
+      styleStatus('');
+      Bd.setDetection(det);
+      Bd.openEditor(rebuildSkin, function () { Bd.clear(); drawFacePreview(); });
+    }).catch(function (e) {
+      console.warn(e);
+      styleStatus('');
+      alert('Bu dosya açılamadı. Başka bir fotoğraf dener misin?');
+    });
+  }
+
+  /* Fotoğrafı seçili stile göre parçalara kesip bebeğe giydirir. */
+  function rebuildSkin() {
+    const Bd = Oyun.body;
+    if (!Bd.src || !Bd.rig) return;
+    if (state.skinBusy) { state.skinAgain = true; return; }
+    let st = Oyun.cartoon.styles.find(function (s) { return s.id === Oyun.face.style; });
+    if (st.ai && !Oyun.animeAI.available()) {
+      Oyun.face.style = 'cizgi';
+      st = Oyun.cartoon.styles.find(function (s) { return s.id === 'cizgi'; });
+    }
+    const src = Bd.src, style = st.id;
+    state.skinBusy = true;
+    styleStatus(st.ai
+      ? '✨ Bütün vücut animeye çevriliyor... İki geçiş yapılır; bilgisayarda 20 saniye, telefonda bir dakikayı bulabilir.'
+      : '🧍 Bebek hazırlanıyor...');
+    const apply = function (skin) { if (skin && Bd.src === src) { Oyun.skin = skin; drawFacePreview(); } };
+    // Yazı ekrana gelsin diye kısa bir an bekle; YZ sürerken önce fotoğrafın aslını giydir
+    new Promise(function (r) { setTimeout(r, 40); }).then(function () {
+      return st.ai && !Oyun.skin ? Bd.build('orijinal').then(apply) : null;
+    }).then(function () {
+      return Bd.build(style);
+    }).then(function (skin) {
+      apply(skin);
+      styleStatus('');
+    }).catch(function (e) {
+      console.warn('Stil uygulanamadı:', e);
+      styleStatus('Bu stil uygulanamadı; fotoğrafın aslı kullanıldı.');
+      Oyun.face.style = 'orijinal';
+      return Bd.build('orijinal').then(apply);
+    }).then(function () {
+      state.skinBusy = false;
+      drawFacePreview();
+      if (state.skinAgain) { state.skinAgain = false; rebuildSkin(); }
     });
   }
 
@@ -741,12 +806,21 @@
       e.target.value = ''; // aynı dosya tekrar seçilebilsin
       if (!file) return;
       Oyun.cropper.open(file, function (cropped) {
+        Oyun.body.clear(); // yüz moduna dön
         Oyun.face.setPhoto(cropped);
         drawFacePreview();
         ensureAI();
       });
     });
+    $('btnUploadBody').addEventListener('click', function () { $('bodyInput').click(); });
+    $('bodyInput').addEventListener('change', function (e) {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (file) loadBody(file);
+    });
     $('btnClearPhoto').addEventListener('click', function () {
+      Oyun.body.clear();
+      styleStatus('');
       Oyun.face.clearPhoto();
       drawFacePreview();
     });

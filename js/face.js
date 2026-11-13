@@ -34,19 +34,25 @@
        state: { level: 0-5, dazed: true/false, t: saniye } */
     draw: function (ctx, r, state) {
       state = state || {};
-      const level = state.level || 0;
-      const dazed = !!state.dazed;
-      const t = state.t || 0;
-
       ctx.save();
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.clip();
 
       if (this.photo) ctx.drawImage(this.photo, -r, -r, 2 * r, 2 * r);
-      else drawDefault(ctx, r, dazed);
+      else drawDefault(ctx, r, !!state.dazed);
+      this.drawOverlays(ctx, r, state);
+      ctx.restore();
+    },
 
-      // --- Hasar süsleri ---
+    /* Hasar süsleri ve krema. Gözlerin (±0.36r, -0.15r) noktasında olduğunu varsayar;
+       tam boy fotoğraf modunda bodyskin.js bunu gerçek göz konumuna taşıyarak çağırır. */
+    drawOverlays: function (ctx, r, state) {
+      state = state || {};
+      const level = state.level || 0;
+      const dazed = !!state.dazed;
+      const t = state.t || 0;
+      ctx.save();
       if (level >= 2) blackEye(ctx, r);
       if (level >= 5 || dazed) {
         spiralEye(ctx, -EYE_X * r, EYE_Y * r, r * 0.22, t * 9);

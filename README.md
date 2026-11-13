@@ -16,7 +16,7 @@ Terminalde yazan adresi (genelde `http://localhost:3000`) tarayıcıda aç.
 
 ## Nasıl oynanır?
 
-1. **Yüz:** İstersen bir fotoğraf yükle ve yüzü daireye oturt. Fotoğrafın altındaki düğmelerle çizim stilini seç: Çizgi Film, ✨ Anime (YZ), Anime Filtre, Pop Art, Karakalem ya da Orijinal.
+1. **Kurban:** İki yol var. "Yüz Fotoğrafı" ile yalnızca yüzü yükleyip daireye oturtursun; bebeğin gövdesi çizim kalır. "Tam Boy Fotoğraf" ile baştan ayağa bir fotoğraf yüklersin; bebeğin tamamı o kişi olur (aşağıda anlatılıyor). Fotoğrafın altındaki düğmelerle çizim stilini seç: Çizgi Film, ✨ Anime (YZ), Anime Filtre, Pop Art, Karakalem ya da Orijinal.
 2. **Karakter:** Dört karakterden birini seç.
 3. **Yetenekler:** 15 yetenekten en fazla 4 tanesini seç. Seçme sıran tuş sıran olur. Karakterin iki favorisi hazır seçili gelir; değiştirebilirsin.
 4. **Mod:** "Serbest" (süre yok) ya da "60 Saniye Yarışı" (süre bitince puan, unvan ve rekor gösterilir).
@@ -42,6 +42,21 @@ Terminalde yazan adresi (genelde `http://localhost:3000`) tarayıcıda aç.
 
 Yüklediğin fotoğraf yalnızca açık olan sekmenin belleğinde durur. Çizgi film filtreleri ve "Anime (YZ)" yapay zekâ modeli de senin cihazında çalışır; hiçbir dış servis kullanılmaz. Hiçbir sunucuya gönderilmez, `localStorage` dahil hiçbir yere kaydedilmez. Sayfayı yenilediğinde ya da kapattığında silinir.
 
+## Tam boy fotoğraftan bebek
+
+"🧍 Tam Boy Fotoğraf" ile yüklenen fotoğraf kafa, gövde, kol ve bacak parçalarına kesilip bebeğe giydirilir; bebek kıyafetiyle, saçıyla o kişinin kendisi olur.
+
+1. Fotoğrafı seç. Bir yapay zekâ modeli (MediaPipe Pose) eklemleri kendiliğinden bulur ve kişiyi arka plandan ayırır.
+2. "Eklemleri kontrol et" ekranı açılır. Yanlış duran noktayı sürükleyerek düzelt; "Kalınlık" kaydırıcısıyla kol ve bacakların ne kadar geniş kesileceğini ayarla.
+3. "Tamam"a bas. Seçtiğin stil bütün vücuda uygulanır.
+
+İyi sonuç için: baştan ayağa görünen, düz duran, kolları gövdeden biraz açık ve arka planı sade bir fotoğraf kullan.
+
+- Model ve kütüphanesi (yaklaşık 24 MB) yalnızca ilk tam boy fotoğrafta indirilir.
+- Anime (YZ) tam boyda iki geçiş yapar (bütün vücut, sonra kafa); bilgisayarda 15-20 saniye sürer.
+- Hasar süsleri (yara bandı, dönen gözler...) fotoğraftaki gerçek göz konumuna yerleşir.
+- Bu özellik de `index.html` dosyasına çift tıklanarak açıldığında otomatik bulma yapamaz; noktaları elle yerleştirirsin ve arka plan silinmez.
+
 ## Anime (YZ) stili
 
 "✨ Anime (YZ)" stili, fotoğrafı anime çizimine çeviren bir yapay zekâ modelini (AnimeGANv2) tarayıcının içinde çalıştırır.
@@ -62,8 +77,11 @@ js/characters.js      Karakter listesi ve yer tutucu çizimleri
 js/attacks.js         Yetenek havuzu ve uçan nesnelerin hareketi
 js/cartoon.js         Fotoğrafı çizgi filme çeviren filtreler
 js/anime-ai.js        Anime (YZ): yapay zekâ modelini tarayıcıda çalıştırır
+js/pose.js            Tam boy fotoğrafta eklemleri ve kişi maskesini bulur
+js/bodyskin.js        Fotoğrafı parçalara kesip bebeğe giydirir, eklem düzenleme ekranı
+lib/mediapipe/        Poz modelini çalıştıran kütüphane
 lib/ort/              Modeli çalıştıran kütüphane (onnxruntime-web)
-models/               Anime modeli ve kaynak notu
+models/               Anime ve poz modelleri, kaynak notu
 js/effects.js         Sarsıntı, yazılar, yıldızlar, ağır çekim
 js/audio.js           Sesler (Web Audio ile üretilir, ses dosyası yok)
 js/ragdoll.js         Eklemli bez bebek

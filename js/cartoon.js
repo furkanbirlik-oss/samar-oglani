@@ -108,10 +108,12 @@
     styles: STYLES,
 
     /* src: kırpılmış kare canvas. Yeni bir canvas döndürür (src değişmez). */
-    apply: function (src, styleId) {
+    apply: function (src, styleId, opts) {
       const st = STYLES.find(function (s) { return s.id === styleId; });
       if (!st || st.ai || st.id === 'orijinal') return src;
-      const w = Math.min(256, src.width), h = w; // filtreler 256 pikselde çalışır (hızlı ve çizgiler belirgin)
+      const full = !!(opts && opts.full); // tam boy fotoğraf: boyutu koru
+      // Yüz filtreleri 256 pikselde çalışır (hızlı ve çizgiler belirgin)
+      const w = full ? src.width : Math.min(256, src.width), h = full ? src.height : w;
       const out = document.createElement('canvas');
       out.width = w; out.height = h;
       const g = out.getContext('2d');
@@ -119,13 +121,13 @@
       g.drawImage(src, 0, 0, w, h);
       const img = g.getImageData(0, 0, w, h);
       let d = img.data;
-      for (let i = 0; i < st.passes; i++) d = smooth(d, w, h, 3, 26);
+      for (let i = 0; i < st.passes; i++) d = smooth(d, w, h, full ? 2 : 3, 26);
       const e = edges(d, w, h, st.lo, st.hi);
       colorize(d, e, st.id);
       img.data.set(d);
       g.putImageData(img, 0, 0);
 
-      if (st.id === 'anime') { // anime allığı (yanaklar)
+      if (st.id === 'anime' && !full) { // anime allığı (yanaklar)
         const c = w / 2, R = w / 2;
         g.fillStyle = 'rgba(255,105,140,.3)';
         for (const sx of [-1, 1]) {

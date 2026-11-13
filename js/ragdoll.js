@@ -217,6 +217,13 @@
         ctx.strokeStyle = INK;
         ctx.lineWidth = 3 * S;
 
+        // Tam boy fotoğraf yüklendiyse parçayı fotoğraftan çiz (bkz. js/bodyskin.js)
+        if (Oyun.skin && Oyun.drawSkinPart(ctx, d.name, S, flash,
+            d.name === 'head' ? { level: level, dazed: this.isDazed(now), t: t } : null)) {
+          ctx.restore();
+          continue;
+        }
+
         if (d.name === 'head') {
           if (level >= 4) Oyun.face.drawBump(ctx, d.r, t);
           Oyun.face.draw(ctx, d.r, { level: level, dazed: this.isDazed(now), t: t });

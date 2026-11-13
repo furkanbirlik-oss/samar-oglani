@@ -346,6 +346,9 @@
       document.addEventListener(type, function () { Oyun.audio.init(); }, true);
     });
 
+    // iPhone: iki parmakla sayfayı büyütmeyi kapat (çift dokunuş CSS'te kapatılıyor)
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+
     buildCards();
     drawFacePreview();
     Oyun.loadCharacterImages(drawCard);

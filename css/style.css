@@ -239,3 +239,11 @@ kbd {
 .zoom-row input { flex: 1; }
 
 .version { margin: 0; font-size: 11px; opacity: .55; }
+
+/* ===== Telefon: hızlı art arda dokununca sayfa büyümesin ===== */
+* {
+  touch-action: manipulation;              /* çift dokunuşla yakınlaştırmayı kapatır */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+#gameCanvas, #cropCanvas { touch-action: none; }  /* sürükleme bizde kalsın */
